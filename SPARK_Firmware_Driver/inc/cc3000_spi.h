@@ -47,12 +47,12 @@
 #define ASSERT_CS()				CC3000_CS_LOW()
 #define DEASSERT_CS()			CC3000_CS_HIGH()
 
-#define DMA_WINDOW_SIZE         1024
+#define DMA_WINDOW_SIZE         512
 #define SPI_WINDOW_SIZE         DMA_WINDOW_SIZE
 
 #define HEADERS_SIZE_EVNT       (SPI_HEADER_SIZE + 5)
 
-#define SPI_BUFFER_SIZE        	1024
+#define SPI_BUFFER_SIZE        	512
 
 typedef void (*gcSpiHandleRx)(void *p);
 typedef void (*gcSpiHandleTx)(void);
