@@ -238,7 +238,7 @@ hci_event_handler(void *pRetParams, unsigned char *from, long *fromlen)
 		if (tSLInformation.usEventOrDataReceived == 0)
 		{
                     volatile system_tick_t now = GetSystem1MsTick();
-                    volatile system_tick_t elapsed = now - start;
+                    volatile long elapsed = now - start;
                       if (elapsed < 0) { // Did we wrap
                          elapsed = start + now; // yes now
                       }
@@ -807,10 +807,16 @@ hci_unsolicited_event_handler(void)
 //*****************************************************************************
 void set_socket_active_status(long Sd, long Status)
 {
+        DEBUG("Sd=%d, Status %s",Sd, Status == SOCKET_STATUS_ACTIVE ?  "SOCKET_STATUS_ACTIVE" : "SOCKET_STATUS_IACTIVE");
 	if(M_IS_VALID_SD(Sd) && M_IS_VALID_STATUS(Status))
 	{
-		socket_active_status &= ~(1 << Sd);      /* clean socket's mask */
-		socket_active_status |= (Status << Sd); /* set new socket's mask */
+	        uint32_t is = __get_PRIMASK();
+              __disable_irq();
+              socket_active_status &= ~(1 << Sd);      /* clean socket's mask */
+	      socket_active_status |= (Status << Sd); /* set new socket's mask */
+              if ((is & 1) == 0) {
+                  __enable_irq();
+              }
 	}
 }
 
@@ -868,11 +874,17 @@ hci_event_unsol_flowcontrol_handler(char *pEvent)
 long
 get_socket_active_status(long Sd)
 {
+        long rv = SOCKET_STATUS_INACTIVE;
 	if(M_IS_VALID_SD(Sd))
 	{
-		return (socket_active_status & (1 << Sd)) ? SOCKET_STATUS_INACTIVE : SOCKET_STATUS_ACTIVE;
+            uint32_t is = __get_PRIMASK();
+            __disable_irq();
+            rv = (socket_active_status & (1 << Sd)) ? SOCKET_STATUS_INACTIVE : SOCKET_STATUS_ACTIVE;
+            if ((is & 1) == 0) {
+                __enable_irq();
+            }
 	}
-	return SOCKET_STATUS_INACTIVE;
+	return rv;
 }
 
 //*****************************************************************************
@@ -920,9 +932,7 @@ SimpleLinkWaitEvent(unsigned short usOpcode, void *pRetParams)
 	// In the blocking implementation the control to caller will be returned only 
 	// after the end of current transaction
 	tSLInformation.usRxEventOpcode = usOpcode;
-	CC3000_API_BLOCKING = 1;
 	hci_event_handler(pRetParams, 0, 0);
-	CC3000_API_BLOCKING = 0;
 }
 
 //*****************************************************************************
@@ -947,9 +957,7 @@ SimpleLinkWaitData(unsigned char *pBuf, unsigned char *from, long *fromlen)
 	// In the blocking implementation the control to caller will be returned only 
 	// after the end of current transaction, i.e. only after data will be received
 	tSLInformation.usRxDataPending = 1;
-	CC3000_API_BLOCKING = 1;
 	hci_event_handler(pBuf, from, fromlen);
-	CC3000_API_BLOCKING = 0;
 }
 
 //*****************************************************************************
