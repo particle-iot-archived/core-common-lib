@@ -708,6 +708,14 @@ hci_unsol_event_handler(char *event_hdr)
 				}
 			}
 			break;
+
+		case HCI_EVNT_ASYNC_ARP_WAITING:
+        case HCI_EVNT_ASYNC_ARP_DONE:
+			{
+				if(tSLInformation.sWlanCB)
+					tSLInformation.sWlanCB(event_type, NULL, 0);
+			}
+			break;
 			
 		//'default' case which means "event not supported" 	
 		default: 
