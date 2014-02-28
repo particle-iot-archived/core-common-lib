@@ -782,11 +782,6 @@ uint16_t BUTTON_GetDebouncedTime(Button_TypeDef Button)
 	return BUTTON_DEBOUNCED_TIME[Button];
 }
 
-void BUTTON_ResetDebouncedState(Button_TypeDef Button)
-{
-	BUTTON_DEBOUNCED_TIME[Button] = 0;
-}
-
 /**
  * @brief  Initialize the CC3000 - CS and ENABLE lines.
  * @param  None
