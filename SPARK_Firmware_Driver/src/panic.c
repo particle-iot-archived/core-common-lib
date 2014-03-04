@@ -37,9 +37,11 @@ void panic_(ePanicCode code)
         LED_SetRGBColor(RGB_COLOR_WHITE);
         LED_Off(LED_RGB);
         uint16_t c;
+        int loops = 2;
         while(1) {
                 // preamble
             for (c = 3; c; c--) {
+                if (loops) IWDG_ReloadCounter();
                 LED_SetRGBColor(pcd.led);
                 LED_On(LED_RGB);
                 Delay_Microsecond(MS2u(150));
@@ -49,6 +51,7 @@ void panic_(ePanicCode code)
 
             Delay_Microsecond(MS2u(100));
             for (c = 3; c; c--) {
+                if (loops) IWDG_ReloadCounter();
                 LED_SetRGBColor(pcd.led);
                 LED_On(LED_RGB);
                 Delay_Microsecond(MS2u(300));
@@ -58,6 +61,7 @@ void panic_(ePanicCode code)
             Delay_Microsecond(MS2u(100));
 
             for (c = 3; c; c--) {
+                if (loops) IWDG_ReloadCounter();
                 LED_SetRGBColor(pcd.led);
                 LED_On(LED_RGB);
                 Delay_Microsecond(MS2u(150));
@@ -66,9 +70,11 @@ void panic_(ePanicCode code)
             }
 
                 // pause
+                if (loops) IWDG_ReloadCounter();
                 Delay_Microsecond(MS2u(900));
                 // play code
                 for (c = code; c; c--) {
+                    if (loops) IWDG_ReloadCounter();
                     LED_SetRGBColor(pcd.led);
                     LED_On(LED_RGB);
                     Delay_Microsecond(MS2u(300));
@@ -76,6 +82,9 @@ void panic_(ePanicCode code)
                     Delay_Microsecond(MS2u(300));
                 }
                 // pause
+                if (loops) IWDG_ReloadCounter();
                 Delay_Microsecond(MS2u(800));
+                 if(loops) loops--;
+)
         }
 }
