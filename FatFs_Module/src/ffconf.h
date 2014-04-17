@@ -10,7 +10,7 @@
 / Functions and Buffer Configurations
 /---------------------------------------------------------------------------*/
 
-#define	_FS_TINY		0	/* 0:Normal or 1:Tiny */
+#define	_FS_TINY		1//0	/* 0:Normal or 1:Tiny */
 /* When _FS_TINY is set to 1, it reduces memory consumption _MAX_SS bytes each
 /  file object. For file data transfer, FatFs uses the common sector buffer in
 /  the file system object (FATFS) instead of private sector buffer eliminated
@@ -57,7 +57,7 @@
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
-#define _CODE_PAGE	932
+#define _CODE_PAGE	437//932
 /* The _CODE_PAGE specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
