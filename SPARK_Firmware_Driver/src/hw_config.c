@@ -28,6 +28,10 @@
 #include "usb_lib.h"
 #include "usb_pwr.h"
 #include <string.h>
+#include "spi_bus.h"
+#include "debug.h"
+#include "cc3000_spi.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 
@@ -105,6 +109,47 @@ __IO uint16_t sFLASH_SPI_CR;
 /* Private function prototypes -----------------------------------------------*/
 
 /* Private functions ---------------------------------------------------------*/
+/*DWD*/
+/*
+ * Crude mutex w/ CC3000.
+ * Use EXTI_IMR to selectively disable the CC3000 interrupt during flash SPI
+ * critical sections. I can find no useful functions in the heap of crap
+ * called stm32f10xexti.c, so I am just going to hardcode the magic numbers
+ * here.
+ */
+#define LALA_EXT_IMR	((uint32_t *)(0x40010400))
+#define	LALA_CC3000_IRQ ((uint32_t)(1 << 11))
+
+static inline uint32_t spl7(void)
+{
+	uint32_t retval;
+	uint32_t ts = __get_PRIMASK();
+	__disable_irq();
+
+	retval = *LALA_EXT_IMR;
+	*LALA_EXT_IMR = retval & ~LALA_CC3000_IRQ;
+
+	if ((ts & 1) == 0) {
+		__enable_irq();
+	}
+
+	return retval & LALA_CC3000_IRQ;
+}
+
+static inline void splx(uint32_t prev)
+{
+	uint32_t ts = __get_PRIMASK();
+	__disable_irq();
+
+	*LALA_EXT_IMR |= (prev & LALA_CC3000_IRQ);
+
+	if ((ts & 1) == 0) {
+		__enable_irq();
+	}
+}
+
+/* DWD */
+
 
 /**
  * @brief  Initialise Data Watchpoint and Trace Register (DWT).
@@ -952,8 +997,8 @@ void CC3000_SPI_DMA_Channels(FunctionalState NewState)
 /* Select CC3000: ChipSelect pin low */
 void CC3000_CS_LOW(void)
 {
+    acquire_spi_bus(BUS_OWNER_CC3000);
 	CC3000_SPI->CR1 &= ((uint16_t)0xFFBF);
-	sFLASH_CS_HIGH();
 	CC3000_SPI->CR1 = CC3000_SPI_CR | ((uint16_t)0x0040);
 	GPIO_ResetBits(CC3000_WIFI_CS_GPIO_PORT, CC3000_WIFI_CS_GPIO_PIN);
 }
@@ -962,6 +1007,7 @@ void CC3000_CS_LOW(void)
 void CC3000_CS_HIGH(void)
 {
 	GPIO_SetBits(CC3000_WIFI_CS_GPIO_PORT, CC3000_WIFI_CS_GPIO_PIN);
+        release_spi_bus(BUS_OWNER_CC3000);
 }
 
 /* CC3000 Hardware related callbacks passed to wlan_init */
@@ -1110,7 +1156,7 @@ void sFLASH_SPI_Init(void)
 	GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
 
 	/*!< Deselect the FLASH: Chip Select high */
-	sFLASH_CS_HIGH();
+	sFLASH_CS_HIGH(sFLASH_CS_LOW());
 
 	/*!< SPI configuration */
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -1130,19 +1176,43 @@ void sFLASH_SPI_Init(void)
 	SPI_Cmd(sFLASH_SPI, ENABLE);
 }
 
+/*
+ * In order to prevent interrupts that need the lock, we mask CC3000
+ * IRQ interrupts before we try to acquire the lock. If the lock is already
+ * acquired (e.g. the CC3000 CS line is low, then we will spin and wait,
+ * because the CC3000 will complete based on SPI/DMA interrupt.
+ * However, if we get the lock, we have already effectively prevented a
+ * CC3000 unsolicited event from conflicting. As soon as we release Flash CS,
+ * we unmask the CC3000 IRQ, allowing it to run to completion as usual.
+ *
+ * This is safe for a CC3000 IRQ occuring between flash operations, because we
+ * will simply spin waiting until the CS3000 CS is deasserted and the lock
+ * released.
+ * 
+ * Key point: we keep the lock the entire time each CS line is asserted.
+ *
+ * At least that's the theory,
+ */
+
 /* Select sFLASH: Chip Select pin low */
-void sFLASH_CS_LOW(void)
+uint32_t sFLASH_CS_LOW(void)
 {
-	sFLASH_SPI->CR1 &= ((uint16_t)0xFFBF);
-	CC3000_CS_HIGH();
-	sFLASH_SPI->CR1 = sFLASH_SPI_CR | ((uint16_t)0x0040);
-	GPIO_ResetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
+    uint32_t retval = spl7();
+    acquire_spi_bus(BUS_OWNER_SFLASH);
+    sFLASH_SPI->CR1 &= ((uint16_t)0xFFBF);
+    sFLASH_SPI->CR1 = sFLASH_SPI_CR | ((uint16_t)0x0040);
+    GPIO_ResetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
+
+    return retval;
 }
 
 /* Deselect sFLASH: Chip Select pin high */
-void sFLASH_CS_HIGH(void)
+void sFLASH_CS_HIGH(uint32_t spl)
 {
-	GPIO_SetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
+    GPIO_SetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
+    release_spi_bus(BUS_OWNER_SFLASH);    
+
+    splx(spl);
 }
 
 /*******************************************************************************

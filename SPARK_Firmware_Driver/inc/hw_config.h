@@ -35,6 +35,13 @@
 #include "cc3000_common.h"
 #include "usb_type.h"
 
+enum SpiBusOwner {
+    BUS_OWNER_NONE = 0,
+    BUS_OWNER_CC3000 = 1,
+    BUS_OWNER_SFLASH = 2
+};
+
+
 /* Exported types ------------------------------------------------------------*/
 typedef enum
 {
@@ -213,8 +220,8 @@ void CC3000_Write_Enable_Pin(unsigned char val);
 /* Serial Flash Hardware related methods */
 void sFLASH_SPI_DeInit(void);
 void sFLASH_SPI_Init(void);
-void sFLASH_CS_LOW(void);
-void sFLASH_CS_HIGH(void);
+uint32_t sFLASH_CS_LOW(void);
+void sFLASH_CS_HIGH(uint32_t);
 
 /* USB hardware peripheral related methods */
 void USB_Disconnect_Config(void);
