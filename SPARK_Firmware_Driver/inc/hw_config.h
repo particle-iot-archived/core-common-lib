@@ -221,8 +221,8 @@ void CC3000_Write_Enable_Pin(unsigned char val);
 /* Serial Flash Hardware related methods */
 void sFLASH_SPI_DeInit(void);
 void sFLASH_SPI_Init(void);
-uint32_t sFLASH_CS_LOW(void);
-void sFLASH_CS_HIGH(uint32_t);
+void sFLASH_CS_LOW(void);
+void sFLASH_CS_HIGH(void);
 
 /* USB hardware peripheral related methods */
 void USB_Disconnect_Config(void);

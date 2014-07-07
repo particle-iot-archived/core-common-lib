@@ -104,52 +104,45 @@ volatile FLASH_Status FLASHStatus = FLASH_COMPLETE;
 __IO uint16_t CC3000_SPI_CR;
 __IO uint16_t sFLASH_SPI_CR;
 
+__IO uint32_t CC3000_EXTI_IRQMask;
+
 /* Extern variables ----------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
 
 /* Private functions ---------------------------------------------------------*/
-/*DWD*/
 /*
  * Crude mutex w/ CC3000.
  * Use EXTI_IMR to selectively disable the CC3000 interrupt during flash SPI
- * critical sections. I can find no useful functions in the heap of crap
- * called stm32f10xexti.c, so I am just going to hardcode the magic numbers
- * here.
+ * critical sections.
  */
-#define LALA_EXT_IMR	((uint32_t *)(0x40010400))
-#define	LALA_CC3000_IRQ ((uint32_t)(1 << 11))
-
-static inline uint32_t spl7(void)
+static inline void CC3000_EXTI_IRQMask_Disable_Save(void)
 {
 	uint32_t retval;
 	uint32_t ts = __get_PRIMASK();
 	__disable_irq();
 
-	retval = *LALA_EXT_IMR;
-	*LALA_EXT_IMR = retval & ~LALA_CC3000_IRQ;
+	retval = EXTI->IMR;
+	EXTI->IMR = retval & ~CC3000_WIFI_INT_EXTI_LINE;
 
 	if ((ts & 1) == 0) {
 		__enable_irq();
 	}
 
-	return retval & LALA_CC3000_IRQ;
+	CC3000_EXTI_IRQMask = retval & CC3000_WIFI_INT_EXTI_LINE;
 }
 
-static inline void splx(uint32_t prev)
+static inline void CC3000_EXTI_IRQMask_Enable_Restore(void)
 {
 	uint32_t ts = __get_PRIMASK();
 	__disable_irq();
 
-	*LALA_EXT_IMR |= (prev & LALA_CC3000_IRQ);
+	EXTI->IMR |= (CC3000_EXTI_IRQMask & CC3000_WIFI_INT_EXTI_LINE);
 
 	if ((ts & 1) == 0) {
 		__enable_irq();
 	}
 }
-
-/* DWD */
-
 
 /**
  * @brief  Initialise Data Watchpoint and Trace Register (DWT).
@@ -1156,7 +1149,7 @@ void sFLASH_SPI_Init(void)
 	GPIO_Init(sFLASH_MEM_CS_GPIO_PORT, &GPIO_InitStructure);
 
 	/*!< Deselect the FLASH: Chip Select high */
-	sFLASH_CS_HIGH(sFLASH_CS_LOW());
+	sFLASH_CS_HIGH();
 
 	/*!< SPI configuration */
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -1195,24 +1188,21 @@ void sFLASH_SPI_Init(void)
  */
 
 /* Select sFLASH: Chip Select pin low */
-uint32_t sFLASH_CS_LOW(void)
+void sFLASH_CS_LOW(void)
 {
-    uint32_t retval = spl7();
+    CC3000_EXTI_IRQMask_Disable_Save();
     acquire_spi_bus(BUS_OWNER_SFLASH);
     sFLASH_SPI->CR1 &= ((uint16_t)0xFFBF);
     sFLASH_SPI->CR1 = sFLASH_SPI_CR | ((uint16_t)0x0040);
     GPIO_ResetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
-
-    return retval;
 }
 
 /* Deselect sFLASH: Chip Select pin high */
-void sFLASH_CS_HIGH(uint32_t spl)
+void sFLASH_CS_HIGH(void)
 {
     GPIO_SetBits(sFLASH_MEM_CS_GPIO_PORT, sFLASH_MEM_CS_GPIO_PIN);
     release_spi_bus(BUS_OWNER_SFLASH);    
-
-    splx(spl);
+    CC3000_EXTI_IRQMask_Enable_Restore();
 }
 
 /*******************************************************************************

@@ -55,29 +55,27 @@ void sFLASH_Init(void)
 
   if(Device_ID == sFLASH_SST25VF040_ID || Device_ID == sFLASH_SST25VF016_ID)
   {
-    uint32_t mask;
-
     /* Select the FLASH: Chip Select low */
-    mask = sFLASH_CS_LOW();
+    sFLASH_CS_LOW();
     /* Send "Disable SO RY/BY# Status" instruction */
     sFLASH_SendByte(sFLASH_CMD_DBSY);
     /* Deselect the FLASH: Chip Select high */
-    sFLASH_CS_HIGH(mask);
+    sFLASH_CS_HIGH();
 
     /* Select the FLASH: Chip Select low */
-    mask = sFLASH_CS_LOW();
+    sFLASH_CS_LOW();
     /* Send "Write Enable Status" instruction */
     sFLASH_SendByte(sFLASH_CMD_EWSR);
     /* Deselect the FLASH: Chip Select high */
-    sFLASH_CS_HIGH(mask);
+    sFLASH_CS_HIGH();
 
     /* Select the FLASH: Chip Select low */
-    mask = sFLASH_CS_LOW();
+    sFLASH_CS_LOW();
     /* Send "Write Status Register" instruction */
     sFLASH_SendByte(sFLASH_CMD_WRSR);
     sFLASH_SendByte(0);
     /* Deselect the FLASH: Chip Select high */
-    sFLASH_CS_HIGH(mask);
+    sFLASH_CS_HIGH();
   }
 }
 
@@ -88,14 +86,12 @@ void sFLASH_Init(void)
   */
 void sFLASH_EraseSector(uint32_t SectorAddr)
 {
-  uint32_t mask;
-
   /* Enable the write access to the FLASH */
   sFLASH_WriteEnable();
 
   /* Sector Erase */
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
   /* Send Sector Erase instruction */
   sFLASH_SendByte(sFLASH_CMD_SE);
   /* Send SectorAddr high nibble address byte */
@@ -105,7 +101,7 @@ void sFLASH_EraseSector(uint32_t SectorAddr)
   /* Send SectorAddr low nibble address byte */
   sFLASH_SendByte(SectorAddr & 0xFF);
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 
   /* Wait till the end of Flash writing */
   sFLASH_WaitForWriteEnd();
@@ -118,18 +114,16 @@ void sFLASH_EraseSector(uint32_t SectorAddr)
   */
 void sFLASH_EraseBulk(void)
 {
-  uint32_t mask;
-
   /* Enable the write access to the FLASH */
   sFLASH_WriteEnable();
 
   /* Bulk Erase */
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
   /* Send Bulk Erase instruction  */
   sFLASH_SendByte(sFLASH_CMD_BE);
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 
   /* Wait till the end of Flash writing */
   sFLASH_WaitForWriteEnd();
@@ -144,13 +138,11 @@ void sFLASH_EraseBulk(void)
   */
 static void sFLASH_WriteByte(uint32_t WriteAddr, uint8_t byte)
 {
-  uint32_t mask;
-
   /* Enable the write access to the FLASH */
   sFLASH_WriteEnable();
 
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
   /* Send "Byte Program" instruction */
   sFLASH_SendByte(sFLASH_CMD_WRITE);
   /* Send WriteAddr high nibble address byte to write to */
@@ -162,7 +154,7 @@ static void sFLASH_WriteByte(uint32_t WriteAddr, uint8_t byte)
   /* Send the byte */
   sFLASH_SendByte(byte);
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
   /* Wait till the end of Flash writing */
   sFLASH_WaitForWriteEnd();
 }
@@ -180,13 +172,11 @@ static void sFLASH_WriteByte(uint32_t WriteAddr, uint8_t byte)
   */
 static void sFLASH_WriteBytes(uint8_t *pBuffer, uint32_t WriteAddr, uint32_t NumByteToWrite)
 {
-  uint32_t mask;
-
   /* Enable the write access to the FLASH */
   sFLASH_WriteEnable();
 
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
   /* Send "Auto Address Increment Word-Program" instruction */
   sFLASH_SendByte(sFLASH_CMD_AAIP);
   /* Send WriteAddr high nibble address byte to write to */
@@ -202,17 +192,17 @@ static void sFLASH_WriteBytes(uint8_t *pBuffer, uint32_t WriteAddr, uint32_t Num
   /* Update NumByteToWrite */
   NumByteToWrite -= 2;
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
   /* Wait till the end of Flash writing */
   sFLASH_WaitForWriteEnd();
 
   /* while there is data to be written on the FLASH */
   while (NumByteToWrite)
   {
-	/* Select the FLASH: Chip Select low */
-	mask = sFLASH_CS_LOW();
-	/* Send "Auto Address Increment Word-Program" instruction */
-	sFLASH_SendByte(sFLASH_CMD_AAIP);
+    /* Select the FLASH: Chip Select low */
+    sFLASH_CS_LOW();
+    /* Send "Auto Address Increment Word-Program" instruction */
+    sFLASH_SendByte(sFLASH_CMD_AAIP);
     /* Send the next byte and point on the next byte */
     sFLASH_SendByte(*pBuffer++);
     /* Send the next byte and point on the next byte */
@@ -220,13 +210,13 @@ static void sFLASH_WriteBytes(uint8_t *pBuffer, uint32_t WriteAddr, uint32_t Num
     /* Update NumByteToWrite */
     NumByteToWrite -= 2;
     /* Deselect the FLASH: Chip Select high */
-    sFLASH_CS_HIGH(mask);
+    sFLASH_CS_HIGH();
     /* Wait till the end of Flash writing */
     sFLASH_WaitForWriteEnd();
   }
 
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 
   /* Disable the write access to the FLASH */
   sFLASH_WriteDisable();
@@ -282,10 +272,8 @@ void sFLASH_WriteBuffer(uint8_t *pBuffer, uint32_t WriteAddr, uint32_t NumByteTo
   */
 void sFLASH_ReadBuffer(uint8_t* pBuffer, uint32_t ReadAddr, uint32_t NumByteToRead)
 {
-  uint32_t mask;
-
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
 
   /* Send "Read from Memory " instruction */
   sFLASH_SendByte(sFLASH_CMD_READ);
@@ -306,7 +294,7 @@ void sFLASH_ReadBuffer(uint8_t* pBuffer, uint32_t ReadAddr, uint32_t NumByteToRe
   }
 
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 }
 
 /**
@@ -317,10 +305,9 @@ void sFLASH_ReadBuffer(uint8_t* pBuffer, uint32_t ReadAddr, uint32_t NumByteToRe
 uint32_t sFLASH_ReadID(void)
 {
   uint8_t byte[3];
-  uint32_t mask;
 
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
 
   /* Send "JEDEC ID Read" instruction */
   sFLASH_SendByte(sFLASH_CMD_RDID);
@@ -335,7 +322,7 @@ uint32_t sFLASH_ReadID(void)
   byte[2] = sFLASH_SendByte(sFLASH_DUMMY_BYTE);
 
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 
   return (byte[0] << 16) | (byte[1] << 8) | byte[2];
 }
@@ -368,16 +355,14 @@ static uint8_t sFLASH_SendByte(uint8_t byte)
   */
 static void sFLASH_WriteEnable(void)
 {
-  uint32_t mask;
-
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
 
   /* Send "Write Enable" instruction */
   sFLASH_SendByte(sFLASH_CMD_WREN);
 
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 }
 
 /**
@@ -387,16 +372,14 @@ static void sFLASH_WriteEnable(void)
   */
 static void sFLASH_WriteDisable(void)
 {
-  uint32_t mask;
-
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
 
   /* Send "Write Disable" instruction */
   sFLASH_SendByte(sFLASH_CMD_WRDI);
 
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 }
 
 /**
@@ -408,10 +391,9 @@ static void sFLASH_WriteDisable(void)
 static void sFLASH_WaitForWriteEnd(void)
 {
   uint8_t flashstatus = 0;
-  uint32_t mask;
 
   /* Select the FLASH: Chip Select low */
-  mask = sFLASH_CS_LOW();
+  sFLASH_CS_LOW();
 
   /* Send "Read Status Register" instruction */
   sFLASH_SendByte(sFLASH_CMD_RDSR);
@@ -426,7 +408,7 @@ static void sFLASH_WaitForWriteEnd(void)
   while ((flashstatus & sFLASH_WIP_FLAG) == SET); /* Write in progress */
 
   /* Deselect the FLASH: Chip Select high */
-  sFLASH_CS_HIGH(mask);
+  sFLASH_CS_HIGH();
 }
 
 int sFLASH_SelfTest(void)
