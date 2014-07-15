@@ -120,7 +120,7 @@
 //                  GLOBAL VARAIABLES
 //*****************************************************************************
 
-UINT32 socket_active_status = SOCKET_STATUS_INIT_VAL; 
+static volatile UINT32 socket_active_status = SOCKET_STATUS_INIT_VAL;
 uint32_t cc3000__event_timeout_ms = 0;
 
 //*****************************************************************************
