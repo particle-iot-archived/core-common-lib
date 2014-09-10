@@ -24,11 +24,9 @@
 */
 
 /* Includes ------------------------------------------------------------------*/
-extern "C" {
 #include "usb_conf.h"
 #include "usb_lib.h"
 #include "usb_desc.h"
-}
 
 #ifdef USB_CDC_ENABLE
 /* USB Standard Device Descriptor */

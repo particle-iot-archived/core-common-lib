@@ -24,14 +24,12 @@
 */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
-extern "C" {
+#include "usb_hal.h"
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_mem.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
-}
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

@@ -33,6 +33,7 @@
 #include "config.h"
 #include "sst25vf_spi.h"
 #include "cc3000_common.h"
+#include "usb_type.h"
 #include "rgbled.h"
 #include "usb_hal.h"
 

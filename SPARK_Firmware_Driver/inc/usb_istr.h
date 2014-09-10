@@ -35,15 +35,15 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
-extern "C" void USB_Istr(void);
+void USB_Istr(void);
 
 /* function prototypes Automatically built defining related macros */
 
 #ifdef USB_CDC_ENABLE
-extern "C" void EP1_IN_Callback(void);
+void EP1_IN_Callback(void);
 #endif
 #ifdef USB_HID_ENABLE
-extern "C" void EP1_IN_Callback(void);
+void EP1_IN_Callback(void);
 #endif
 void EP2_IN_Callback(void);
 void EP3_IN_Callback(void);
@@ -55,7 +55,7 @@ void EP7_IN_Callback(void);
 void EP1_OUT_Callback(void);
 void EP2_OUT_Callback(void);
 #ifdef USB_CDC_ENABLE
-extern "C" void EP3_OUT_Callback(void);
+void EP3_OUT_Callback(void);
 #endif
 #ifdef USB_HID_ENABLE
 void EP3_OUT_Callback(void);
@@ -91,7 +91,7 @@ void RESET_Callback(void);
 
 #ifdef SOF_CALLBACK
 #ifdef USB_CDC_ENABLE
-extern "C" void SOF_Callback(void);
+void SOF_Callback(void);
 #endif
 #endif
 
