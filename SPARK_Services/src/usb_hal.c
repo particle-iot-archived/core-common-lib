@@ -38,6 +38,7 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+#ifdef USB_CDC_ENABLE
 uint8_t  USART_Rx_Buffer[USART_RX_DATA_SIZE];
 uint32_t USART_Rx_ptr_in = 0;
 uint32_t USART_Rx_ptr_out = 0;
@@ -53,6 +54,7 @@ uint8_t  USB_Rx_State = 0;
 uint32_t USB_USART_BaudRate = 9600;
 
 __IO uint8_t PrevXferComplete;
+#endif
 
 /* Extern variables ----------------------------------------------------------*/
 extern LINE_CODING linecoding;
@@ -60,6 +62,7 @@ extern LINE_CODING linecoding;
 /* Private function prototypes -----------------------------------------------*/
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
 
+#if defined (USB_CDC_ENABLE) || defined (USB_HID_ENABLE)
 /*******************************************************************************
  * Function Name  : SPARK_USB_Setup
  * Description    : Spark USB Setup.
@@ -76,6 +79,32 @@ void SPARK_USB_Setup(void)
   USB_Init();
 }
 
+/*******************************************************************************
+ * Function Name  : Get_SerialNum.
+ * Description    : Create the serial number string descriptor.
+ * Input          : None.
+ * Output         : None.
+ * Return         : None.
+ *******************************************************************************/
+void Get_SerialNum(void)
+{
+  uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
+
+  Device_Serial0 = *(uint32_t*)ID1;
+  Device_Serial1 = *(uint32_t*)ID2;
+  Device_Serial2 = *(uint32_t*)ID3;
+
+  Device_Serial0 += Device_Serial2;
+
+  if (Device_Serial0 != 0)
+  {
+    IntToUnicode (Device_Serial0, &USB_StringSerial[2] , 8);
+    IntToUnicode (Device_Serial1, &USB_StringSerial[18], 4);
+  }
+}
+#endif
+
+#ifdef USB_CDC_ENABLE
 /*******************************************************************************
  * Function Name  : USB_USART_Init
  * Description    : Start USB-USART protocol.
@@ -161,7 +190,9 @@ void USB_USART_Send_Data(uint8_t Data)
     }
   }
 }
+#endif
 
+#ifdef USB_HID_ENABLE
 /*******************************************************************************
  * Function Name : USB_HID_Send_Report.
  * Description   : Send HID Report Info to Host.
@@ -184,30 +215,7 @@ void USB_HID_Send_Report(void *pHIDReport, size_t reportSize)
     SetEPTxValid(ENDP1);
   }
 }
-
-/*******************************************************************************
- * Function Name  : Get_SerialNum.
- * Description    : Create the serial number string descriptor.
- * Input          : None.
- * Output         : None.
- * Return         : None.
- *******************************************************************************/
-void Get_SerialNum(void)
-{
-  uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
-
-  Device_Serial0 = *(uint32_t*)ID1;
-  Device_Serial1 = *(uint32_t*)ID2;
-  Device_Serial2 = *(uint32_t*)ID3;
-
-  Device_Serial0 += Device_Serial2;
-
-  if (Device_Serial0 != 0)
-  {
-    IntToUnicode (Device_Serial0, &USB_StringSerial[2] , 8);
-    IntToUnicode (Device_Serial1, &USB_StringSerial[18], 4);
-  }
-}
+#endif
 
 /*******************************************************************************
  * Function Name  : HexToChar.

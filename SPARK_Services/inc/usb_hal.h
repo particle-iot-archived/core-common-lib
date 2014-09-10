@@ -29,6 +29,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hw_config.h"
+#include "usb_conf.h"
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -57,12 +58,20 @@
 #define USART_RX_DATA_SIZE      256
 
 /* Exported functions ------------------------------------------------------- */
+#if defined (USB_CDC_ENABLE) || defined (USB_HID_ENABLE)
 void SPARK_USB_Setup(void);
+void Get_SerialNum(void);
+#endif
+
+#ifdef USB_CDC_ENABLE
 void USB_USART_Init(uint32_t baudRate);
 uint8_t USB_USART_Available_Data(void);
 int32_t USB_USART_Receive_Data(void);
 void USB_USART_Send_Data(uint8_t Data);
+#endif
+
+#ifdef USB_HID_ENABLE
 void USB_HID_Send_Report(void *pHIDReport, size_t reportSize);
-void Get_SerialNum(void);
+#endif
 
 #endif  /* __USB_HAL_H */
