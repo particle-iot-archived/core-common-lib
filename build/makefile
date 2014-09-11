@@ -50,7 +50,7 @@ CFLAGS += -MD -MP -MF $@.d
 
 # Target specific defines
 CFLAGS += -DUSE_STDPERIPH_DRIVER
-CFLAGS += -DSTM32F10X_MD
+
 
 ifeq ("$(USE_SWD_JTAG)","y") 
 CFLAGS += -DUSE_SWD_JTAG
@@ -61,6 +61,21 @@ CFLAGS += -DDEBUG_BUILD
 else
 CFLAGS += -DRELEASE_BUILD
 endif
+
+ifeq ("$(SPARK_PRODUCT_ID)","")
+SPARK_PRODUCT_ID=0
+$(info SPARK_PRODUCT_ID not set, assuming 0)
+endif
+
+STM32_DEVICE=STM32F10X_MD
+ifeq ("$(SPARK_PRODUCT_ID)","2")
+STM32_DEVICE=STM32F10X_HD
+endif
+
+CFLAGS += -D$(STM32_DEVICE)
+
+
+CFLAGS += -DSPARK_PRODUCT_ID=$(SPARK_PRODUCT_ID)
 
 # C++ specific flags
 CPPFLAGS = -fno-exceptions -fno-rtti
@@ -77,7 +92,7 @@ ALLDEPS += $(addprefix $(BUILD_PATH)/, $(ASRC:.S=.o.d))
 # All Target
 all: check_external_deps $(TARGET)
 
-# Check for external dependancies, none in this case.
+# Check for external dependencies, none in this case.
 check_external_deps:
 
 # Tool invocations
@@ -112,6 +127,6 @@ clean:
 .PHONY: all clean
 .SECONDARY:
 
-# Include auto generated dependancy files
+# Include auto-generated dependency files
 -include $(ALLDEPS)
 
