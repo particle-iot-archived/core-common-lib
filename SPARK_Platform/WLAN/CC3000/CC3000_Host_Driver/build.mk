@@ -4,7 +4,7 @@
 # Define the prefix to this directory. 
 # Note: The name must be unique within this build and should be
 #       based on the root of the project
-TARGET_CC3000_PATH = CC3000_Host_Driver
+TARGET_CC3000_PATH = SPARK_Platform/WLAN/CC3000/CC3000_Host_Driver
 
 # Add tropicssl include to all objects built for this target
 INCLUDE_DIRS += $(TARGET_CC3000_PATH)
