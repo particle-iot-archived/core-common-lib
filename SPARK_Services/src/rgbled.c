@@ -56,15 +56,28 @@ uint8_t Get_LED_Brightness()
     return LED_RGB_BRIGHTNESS;
 }
 
+inline uint8_t asRGBComponent(uint16_t ccr) {
+    return (uint8_t)((ccr<<8)/Get_RGB_LED_Max_Value());
+}
+
+void Change_RGB_LED(uint16_t* ccr) {
+    Set_RGB_LED(ccr);
+    if (onChangeRGBLED) {
+        uint8_t red = asRGBComponent(ccr[0]);
+        uint8_t green = asRGBComponent(ccr[1]);
+        uint8_t blue = asRGBComponent(ccr[2]);
+        onChangeRGBLED(red, green, blue);
+    }
+}
+
 /**
  * Sets the color on the RGB led. The color is adjusted for brightness.
  * @param color
  */
-
 void Set_RGB_LED_Color(uint32_t color) {
     uint16_t ccr[3];
     Set_CCR_Color(color, ccr);
-    Set_RGB_LED(ccr);
+    Change_RGB_LED(ccr);    
 }
 
 uint16_t scale_fade(uint8_t step, uint16_t value) {
@@ -77,7 +90,7 @@ void Set_RGB_LED_Scale(uint8_t step, uint32_t color) {
     Set_CCR_Color(color, ccr);
     for (i=0; i<3; i++)
         ccr[i] = scale_fade(step, ccr[i]);
-    Set_RGB_LED(ccr);
+    Change_RGB_LED(ccr);
 }
 
 
